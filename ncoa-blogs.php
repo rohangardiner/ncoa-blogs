@@ -62,26 +62,30 @@ function ncoa_upload_image_from_url($image_url, $post_id = 0, $desc = null, $ret
 }
 
 // Handle plugin updating
-add_action( 'init', 'ncoa_plugin_updater_init' );
+add_action('init', 'ncoa_plugin_updater_init');
 function ncoa_plugin_updater_init() {
-	include_once 'updater.php';
-	define( 'WP_GITHUB_FORCE_UPDATE', true );
-	if ( is_admin() ) { // note the use of is_admin() to double check that this is happening in the admin
-		$config = array(
-			'slug' => plugin_basename( __FILE__ ),
-			'proper_folder_name' => 'ncoa-blogs', // this is the name of the folder your plugin lives in
-      'api_url' => 'https://api.github.com/repos/rohangardiner/ncoa-blogs', // the GitHub API url of your GitHub repo
-      'raw_url' => 'https://raw.github.com/rohangardiner/ncoa-blogs/main', // the GitHub raw url of your GitHub repo
-      'github_url' => 'https://github.com/rohangardiner/ncoa-blogs', // the GitHub url of your GitHub repo
-      'zip_url' => 'https://github.com/rohangardiner/ncoa-blogs/zipball/main', // the zip url of the GitHub repo
-      'sslverify' => true, // whether WP should check the validity of the SSL cert when getting an update, see https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/2 and https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/4 for details
-      'requires' => '6.0', // which version of WordPress does your plugin require?
-      'tested' => '6.8.2', // which version of WordPress is your plugin tested up to?
-      'readme' => 'readme.md', // which file to use as the readme for the version number
-      'access_token' => '', // Access private repositories by authorizing under Plugins > GitHub Updates when this example plugin is installed
-		);
-		new WP_GitHub_Updater_Ncoa_Blogs( $config );
-	}
+   include_once 'updater.php';
+
+   if (! defined('WP_GITHUB_FORCE_UPDATE')) {
+      define('WP_GITHUB_FORCE_UPDATE', true);
+   }
+
+   if (is_admin()) { // note the use of is_admin() to double check that this is happening in the admin
+      $config = array(
+         'slug' => plugin_basename(__FILE__),
+         'proper_folder_name' => 'ncoa-blogs', // this is the name of the folder your plugin lives in
+         'api_url' => 'https://api.github.com/repos/rohangardiner/ncoa-blogs', // the GitHub API url of your GitHub repo
+         'raw_url' => 'https://raw.github.com/rohangardiner/ncoa-blogs/main', // the GitHub raw url of your GitHub repo
+         'github_url' => 'https://github.com/rohangardiner/ncoa-blogs', // the GitHub url of your GitHub repo
+         'zip_url' => 'https://github.com/rohangardiner/ncoa-blogs/zipball/main', // the zip url of the GitHub repo
+         'sslverify' => true, // whether WP should check the validity of the SSL cert when getting an update, see https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/2 and https://github.com/jkudish/WordPress-GitHub-Plugin-Updater/issues/4 for details
+         'requires' => '6.0', // which version of WordPress does your plugin require?
+         'tested' => '6.8.2', // which version of WordPress is your plugin tested up to?
+         'readme' => 'readme.md', // which file to use as the readme for the version number
+         'access_token' => '', // Access private repositories by authorizing under Plugins > GitHub Updates when this example plugin is installed
+      );
+      new WP_GitHub_Updater_Ncoa_Blogs($config);
+   }
 }
 
 // Handle loading translations
