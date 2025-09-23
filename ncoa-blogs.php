@@ -80,7 +80,8 @@ if (is_admin()) {
    new WP_GitHub_Updater_Ncoa_Blogs($config);
 }
 
+// Handle loading translations
+add_action('plugins_loaded', 'ncoa_load_textdomain');
 function ncoa_load_textdomain() {
    load_plugin_textdomain('ncoa-blogs', false, dirname(plugin_basename(__FILE__)) . '/languages/');
 }
-add_action('init', 'ncoa_load_textdomain');
