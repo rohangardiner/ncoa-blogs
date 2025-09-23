@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.2.32
+ * Version: 0.2.4
  * Author: Rohan
  */
 
