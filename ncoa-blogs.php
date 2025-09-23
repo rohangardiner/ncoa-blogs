@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.2.3
+ * Version: 0.2.31
  * Author: Rohan
  */
 
@@ -59,6 +59,14 @@ function ncoa_upload_image_from_url($image_url, $post_id = 0, $desc = null, $ret
       return false;
    }
    return $attachment_id;
+}
+
+// Add shortcode to display banner content
+add_shortcode('banner', 'ncoa_banner');
+function ncoa_banner($content = null) {
+   if ($content) {
+      return '<div class="ncoa-banner">' . wp_kses_post($content) . '</div>';
+   }
 }
 
 // Handle plugin updating
