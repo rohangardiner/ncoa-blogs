@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: Rohan
  */
 
@@ -79,3 +79,8 @@ if (is_admin()) {
    );
    new WP_GitHub_Updater_Ncoa_Blogs($config);
 }
+
+function ncoa_load_textdomain() {
+   load_plugin_textdomain('my-text-domain', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+}
+add_action('init', 'ncoa_load_textdomain');
