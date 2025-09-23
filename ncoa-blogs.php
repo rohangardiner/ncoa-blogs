@@ -62,9 +62,9 @@ function ncoa_upload_image_from_url($image_url, $post_id = 0, $desc = null, $ret
 }
 
 // Add shortcode to display banner content
-add_shortcode('banner', 'ncoa_blog_banner');
-function ncoa_blog_banner($content = null) {
-   $output = '<div class="blog-banner">' . do_shortcode($content) . '</div>';
+add_shortcode('blogbanner', 'ncoa_blog_banner');
+function ncoa_blog_banner($atts = array('background' => 'assets/default-bg.jpg'), $content = null) {
+   $output = '<div class="blog-banner" style="background-image: url('.$atts['background'].')">' . do_shortcode($content) . '</div>';
    return $output;
 }
 
