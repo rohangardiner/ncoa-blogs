@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.2.4
+ * Version: 0.2.5
  * Author: Rohan
  */
 
@@ -63,8 +63,11 @@ function ncoa_upload_image_from_url($image_url, $post_id = 0, $desc = null, $ret
 
 // Add shortcode to display banner content
 add_shortcode('blogbanner', 'ncoa_blog_banner');
-function ncoa_blog_banner($atts = array('background' => 'assets/default-bg.jpg'), $content = null) {
-   $output = '<div class="blog-banner" style="background-image: url('.$atts['background'].')">' . do_shortcode($content) . '</div>';
+function ncoa_blog_banner($atts = array(), $content = null) {
+   $background = $atts['background'] ?? plugin_dir_url(__FILE__).'/assets/default-bg.jpg';
+   $output = '<div class="blog-banner" 
+   style="background-image: url('.$background.'); background-size: cover; background-position: center; border-radius: 4px; padding: 20px;"
+   >' . do_shortcode($content) . '</div>';
    return $output;
 }
 
