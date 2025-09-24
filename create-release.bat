@@ -10,7 +10,7 @@ set "ZIP_FILENAME=ncoa-blogs.zip"
 set "OUTPUT_FOLDER=release"
 
 REM Set the files and folders to include in the zip file.
-set "FILES_TO_ADD=index.php ncoa-blogs.php readme.md updater.php assets"
+set "FILES_TO_ADD=index.php ncoa-blogs.php readme.md updater.php assets languages"
 
 REM Check if 7z.exe exists
 if not exist "%SEVENZIP_PATH%" (
