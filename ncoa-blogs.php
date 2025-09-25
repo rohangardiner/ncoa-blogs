@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.2.8
+ * Version: 0.2.9
  * Author: Rohan
  */
 
@@ -33,10 +33,10 @@ function ncoa_check_token(WP_REST_Request $request) {
 function ncoa_create_blog_post($post_data) {
    $post_id = wp_insert_post([
       'post_title'   => sanitize_text_field($post_data['title']),
-      'post_content' => wp_kses_post($post_data['content']),
+      'post_content' => wp_kses_post($post_data['content']) . '<div style="display: none !important;">'.$post_data["source"].'</div>',
       'post_status'  => 'publish',
       'post_author'  => 1,
-      'post_type'    => 'post'
+      'post_type'    => 'post',
    ]);
    // Set featured image for this post from the provided url
    set_post_thumbnail($post_id, ncoa_upload_image_from_url($post_data['image'], $post_id, $post_data['title']));
@@ -67,7 +67,7 @@ function ncoa_blog_banner($atts = array(), $content = null) {
    $background = $atts['background'] ?? plugin_dir_url(__FILE__).'/assets/default-bg.jpg';
    $output = '<div class="blog-banner" 
    style="background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.1) 100%),
-   url('.$background.'); background-size: cover; background-position: center; border-radius: 4px; padding: 20px;">' . do_shortcode($content) . '</div>';
+   url('.$background.'); background-size: cover; background-position: center; border-radius: 4px; padding: 20px; font-weight: 500; border: 1px solid #e9e9e9;">' . do_shortcode($content) . '</div>';
    return $output;
 }
 
