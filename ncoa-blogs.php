@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.1
+ * Version: 0.3.2
  * Author: Rohan
  */
 
@@ -100,19 +100,17 @@ function ncoa_related_pillars() {
       return;
    }
 
+   $tag_ids = array();
+   foreach( $post_tags as $tag ) {
+       $tag_ids[] = $tag->term_id;
+   }
+
    $output = '';
 
    $args = array(
       'post_type' => 'post',
       'post_status' => 'publish',
-      'tax_query' => array(
-         'relation' => 'OR', // Use 'AND' to require all specified tags, 'OR' for any of the tags
-         array(
-            'taxonomy' => 'post_tag',
-            'field'    => 'name',
-            'terms'    => $post_tags,
-         ),
-      ),
+      'tag__in' => $tag_ids,
       'posts_per_page' => -1,
    );
    $query = new WP_Query($args);
@@ -123,10 +121,33 @@ function ncoa_related_pillars() {
 
       while ($query->have_posts()) {
          $query->the_post();
-         $output .= '<details><summary>' . the_title() . '</summary><p>' . get_the_excerpt() . '</p></details>';
+         $current_post_id = get_the_ID();
+         $output .= '<details>
+            <summary style="color: #1f1f1f;">' . get_the_title($current_post_id) . '</summary>
+            <p style="margin: 20px 0;">' . get_the_excerpt($current_post_id) . '</p>
+            <div style="display:flex; flex-direction: row; gap: 10px;">
+               <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" style="height: 3rem; aspect-ratio: 1/1; border: 1px solid #ccc; border-radius: 50px; object-fit: cover;">
+               <div style="display: flex; flex-direction: column;">
+                  <span style="font-size: 0.8rem;">'.get_permalink( $current_post_id ).'</span>
+                  <a style="font-weight: 600; font-size: 1.1rem;" href="'.get_permalink( $current_post_id ).'">'.get_the_title($current_post_id).'</a>
+               </div>
+            </div>
+         </details>';
       }
       wp_reset_postdata(); // Restore original post data
-      $output .= '</div>';
+      $output .= '</div>
+      <style>
+         .blog-related details {
+         color: #474747;
+            border-bottom: 1px solid #dadce0;
+            padding: 10px 0;
+         }
+         .blog-related summary::marker {
+            color: #747878;
+            background-color: #e9e9e9;
+            border-radius: 50px;
+         }
+      </style>';
    }
 
    return $output;
