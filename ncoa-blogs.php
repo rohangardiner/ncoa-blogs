@@ -126,7 +126,7 @@ function ncoa_related_pillars() {
          $output .= '<details>
             <summary>' . get_the_title($current_post_id) . '</summary>
             <p class="blog-related-content">' . get_the_excerpt($current_post_id) . '</p>
-            <div slass="blog-related-links">
+            <div class="blog-related-links">
                <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" class="blog-related-thumb">
                <div class="blog-related-col">
                   <span class="blog-related-url">'.get_permalink( $current_post_id ).'</span>

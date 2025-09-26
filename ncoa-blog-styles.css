@@ -14,28 +14,23 @@
    border-bottom: 1px solid #dadce0;
    padding: 10px 0;
 }
-
 .blog-related details summary {
    color: #111111;
 }
-
 .blog-related summary::marker {
    color: #747878;
    background-color: #e9e9e9;
    border-radius: 50px;
 }
-
 .blog-related-content {
    margin: 20px 0;
 }
-
 .blog-related-links {
-   display:flex;
+   display: flex;
    flex-direction: row;
    align-items: center;
    gap: 10px;
 }
-
 .blog-related-thumb {
    height: 2.5rem;
    aspect-ratio: 1/1;
@@ -43,16 +38,13 @@
    border-radius: 50px;
    object-fit: cover;
 }
-
 .blog-related-col {
    display: flex; 
    flex-direction: column;
 }
-
 .blog-related-url {
    font-size: 0.8rem;
 }
-
 .blog-related-title {
    font-weight: 600;
    font-size: 1.1rem;
