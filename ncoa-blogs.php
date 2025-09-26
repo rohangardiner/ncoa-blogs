@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.6
+ * Version: 0.3.7
  * Author: Rohan
  */
 
@@ -100,7 +100,6 @@ function ncoa_related_pillars() {
    if (empty($post_tags)) {
       return;
    }
-
    $tag_ids = array();
    foreach( $post_tags as $tag ) {
        $tag_ids[] = $tag->term_id;
@@ -117,9 +116,8 @@ function ncoa_related_pillars() {
    $query = new WP_Query($args);
 
    if ($query->have_posts()) {
-
       $output .= '<div class="blog-related">';
-
+      $output .= '<h3>People also ask</h3>';
       while ($query->have_posts()) {
          $query->the_post();
          $current_post_id = get_the_ID();
@@ -138,7 +136,6 @@ function ncoa_related_pillars() {
       wp_reset_postdata(); // Restore original post data
       $output .= '</div>';
    }
-
    return $output;
 }
 
