@@ -33,7 +33,7 @@ function ncoa_check_token(WP_REST_Request $request) {
 function ncoa_create_blog_post($post_data) {
    $post_id = wp_insert_post([
       'post_title'   => sanitize_text_field($post_data['title']),
-      'post_content' => wp_kses_post($post_data['content']) . '<div style="display: none !important;">'.$post_data["source"].'</div>',
+      'post_content' => wp_kses_post($post_data['content']) . '<div style="display: none !important;">' . $post_data["source"] . '</div>',
       'post_status'  => 'publish',
       'post_author'  => 1,
       'post_type'    => 'post',
@@ -41,10 +41,30 @@ function ncoa_create_blog_post($post_data) {
    // Set featured image for this post from the provided url
    set_post_thumbnail($post_id, ncoa_upload_image_from_url($post_data['image'], $post_id, $post_data['title']));
 
+   // Set SEO title and meta description
+   $seo_title = $post_data['seo_title'] ?? $post_data['post_title'];
+   $seo_description = $post_data['seo_description'] ?? wp_trim_words(strip_tags($post_data['post_content']), 30, '...');
+   ncoa_update_seo_meta($post_id, $seo_title, $seo_description);
+
    if ($post_id && !is_wp_error($post_id)) {
       return rest_ensure_response(['created' => $post_id]);
    } else {
       return rest_ensure_response(['error' => 'Post could not be created']);
+   }
+}
+
+// Set SEO title and meta description
+function ncoa_update_seo_meta($post_id, $seo_title, $seo_description) {
+   // Check for Yoast or Rank Math
+   if (in_array('wordpress-seo/wp-seo.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+      update_post_meta($post_id, '_yoast_wpseo_title', $seo_title . '');
+      update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_description);
+   }
+
+   if (in_array('seo-by-rank-math/rank-math.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+      // Update Rank Math SEO title and description
+      update_post_meta($post_id, 'rank_math_title', $seo_title . ' %sep% %sitename%');
+      update_post_meta($post_id, 'rank_math_description', $seo_description);
    }
 }
 
@@ -64,10 +84,50 @@ function ncoa_upload_image_from_url($image_url, $post_id = 0, $desc = null, $ret
 // Add shortcode to display banner content
 add_shortcode('blogbanner', 'ncoa_blog_banner');
 function ncoa_blog_banner($atts = array(), $content = null) {
-   $background = $atts['background'] ?? plugin_dir_url(__FILE__).'/assets/default-bg.jpg';
+   $background = $atts['background'] ?? plugin_dir_url(__FILE__) . '/assets/default-bg.jpg';
    $output = '<div class="blog-banner" 
    style="background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.1) 100%),
-   url('.$background.'); background-size: cover; background-position: center; border-radius: 4px; padding: 20px; font-weight: 500; border: 1px solid #e9e9e9;">' . do_shortcode($content) . '</div>';
+   url(' . $background . '); background-size: cover; background-position: center; border-radius: 4px; padding: 20px; font-weight: 500; border: 1px solid #e9e9e9;">' . do_shortcode($content) . '</div>';
+   return $output;
+}
+
+// Add section to display Google-style dropdown related questions
+add_shortcode('relatedpillars', 'ncoa_related_pillars');
+function ncoa_related_pillars() {
+   $post_tags = get_the_tags();
+   if (empty($post_tags)) {
+      return;
+   }
+
+   $output = '';
+
+   $args = array(
+      'post_type' => 'post',
+      'post_status' => 'publish',
+      'tax_query' => array(
+         'relation' => 'OR', // Use 'AND' to require all specified tags, 'OR' for any of the tags
+         array(
+            'taxonomy' => 'post_tag',
+            'field'    => 'name',
+            'terms'    => $post_tags,
+         ),
+      ),
+      'posts_per_page' => -1,
+   );
+   $query = new WP_Query($args);
+
+   if ($query->have_posts()) {
+
+      $output .= '<div class="blog-related">';
+
+      while ($query->have_posts()) {
+         $query->the_post();
+         $output .= '<details><summary>' . the_title() . '</summary><p>' . get_the_excerpt() . '</p></details>';
+      }
+      wp_reset_postdata(); // Restore original post data
+      $output .= '</div>';
+   }
+
    return $output;
 }
 
