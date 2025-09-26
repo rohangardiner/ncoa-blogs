@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.0
+ * Version: 0.3.1
  * Author: Rohan
  */
 
@@ -37,6 +37,7 @@ function ncoa_create_blog_post($post_data) {
       'post_status'  => 'publish',
       'post_author'  => 1,
       'post_type'    => 'post',
+      'tags_input'   => $post_data['pillars'],
    ]);
    // Set featured image for this post from the provided url
    set_post_thumbnail($post_id, ncoa_upload_image_from_url($post_data['image'], $post_id, $post_data['title']));
@@ -57,7 +58,7 @@ function ncoa_create_blog_post($post_data) {
 function ncoa_update_seo_meta($post_id, $seo_title, $seo_description) {
    // Check for Yoast or Rank Math
    if (in_array('wordpress-seo/wp-seo.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-      update_post_meta($post_id, '_yoast_wpseo_title', $seo_title . '');
+      update_post_meta($post_id, '_yoast_wpseo_title', $seo_title);
       update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_description);
    }
 
