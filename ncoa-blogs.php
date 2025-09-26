@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.3
+ * Version: 0.3.4
  * Author: Rohan
  */
 
@@ -47,6 +47,7 @@ function ncoa_create_blog_post($post_data) {
    $seo_description = $post_data['seo_description'] ?? wp_trim_words(strip_tags($post_data['post_content']), 30, '...');
    ncoa_update_seo_meta($post_id, $seo_title, $seo_description);
 
+   // Return response
    if ($post_id && !is_wp_error($post_id)) {
       return rest_ensure_response(['created' => $post_id]);
    } else {
@@ -88,11 +89,11 @@ function ncoa_blog_banner($atts = array(), $content = null) {
    $background = $atts['background'] ?? plugin_dir_url(__FILE__) . '/assets/default-bg.jpg';
    $output = '<div class="blog-banner" 
    style="background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.1) 100%),
-   url(' . $background . '); background-size: cover; background-position: center; border-radius: 4px; padding: 20px; font-weight: 500; border: 1px solid #e9e9e9;">' . do_shortcode($content) . '</div>';
+   url(' . $background . ');">' . do_shortcode($content) . '</div>';
    return $output;
 }
 
-// Add section to display Google-style dropdown related questions
+// Add shortcode to display Google-style related question dropdowns
 add_shortcode('relatedpillars', 'ncoa_related_pillars');
 function ncoa_related_pillars() {
    $post_tags = get_the_tags();
@@ -123,7 +124,7 @@ function ncoa_related_pillars() {
          $query->the_post();
          $current_post_id = get_the_ID();
          $output .= '<details>
-            <summary style="color: #111111;">' . get_the_title($current_post_id) . '</summary>
+            <summary>' . get_the_title($current_post_id) . '</summary>
             <p style="margin: 20px 0;">' . get_the_excerpt($current_post_id) . '</p>
             <div style="display:flex; flex-direction: row; align-items: center; gap: 10px;">
                <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" style="height: 2.5rem; aspect-ratio: 1/1; border: 1px solid #ccc; border-radius: 50px; object-fit: cover;">
@@ -135,19 +136,7 @@ function ncoa_related_pillars() {
          </details>';
       }
       wp_reset_postdata(); // Restore original post data
-      $output .= '</div>
-      <style>
-         .blog-related details {
-         color: #474747;
-            border-bottom: 1px solid #dadce0;
-            padding: 10px 0;
-         }
-         .blog-related summary::marker {
-            color: #747878;
-            background-color: #e9e9e9;
-            border-radius: 50px;
-         }
-      </style>';
+      $output .= '</div>';
    }
 
    return $output;
@@ -184,4 +173,10 @@ function ncoa_plugin_updater_init() {
 add_action('plugins_loaded', 'ncoa_load_textdomain');
 function ncoa_load_textdomain() {
    load_plugin_textdomain('ncoa-blogs', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+}
+
+// Handle enqueueing styles
+add_action( 'wp_enqueue_scripts', 'ncoa_blog_styles' );
+function ncoa_blog_styles() {
+   wp_enqueue_style( 'ncoa-blog-style', plugin_dir_url( __FILE__ ) . '/ncoa-blog-styles.css', array(), '1.0.0', 'all' );
 }
