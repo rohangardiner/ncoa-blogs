@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.4
+ * Version: 0.3.5
  * Author: Rohan
  */
 
@@ -33,7 +33,7 @@ function ncoa_check_token(WP_REST_Request $request) {
 function ncoa_create_blog_post($post_data) {
    $post_id = wp_insert_post([
       'post_title'   => sanitize_text_field($post_data['title']),
-      'post_content' => wp_kses_post($post_data['content']) . '<div style="display: none !important;">' . $post_data["source"] . '</div>',
+      'post_content' => wp_kses_post($post_data['content']) . '<div class="src">' . $post_data["source"] . '</div>',
       'post_status'  => 'publish',
       'post_author'  => 1,
       'post_type'    => 'post',
@@ -125,12 +125,12 @@ function ncoa_related_pillars() {
          $current_post_id = get_the_ID();
          $output .= '<details>
             <summary>' . get_the_title($current_post_id) . '</summary>
-            <p style="margin: 20px 0;">' . get_the_excerpt($current_post_id) . '</p>
-            <div style="display:flex; flex-direction: row; align-items: center; gap: 10px;">
-               <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" style="height: 2.5rem; aspect-ratio: 1/1; border: 1px solid #ccc; border-radius: 50px; object-fit: cover;">
-               <div style="display: flex; flex-direction: column;">
-                  <span style="font-size: 0.8rem;">'.get_permalink( $current_post_id ).'</span>
-                  <a style="font-weight: 600; font-size: 1.1rem;" href="'.get_permalink( $current_post_id ).'">'.get_the_title($current_post_id).'</a>
+            <p class="blog-related-content">' . get_the_excerpt($current_post_id) . '</p>
+            <div slass="blog-related-links">
+               <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" class="blog-related-thumb">
+               <div class="blog-related-col">
+                  <span class="blog-related-url">'.get_permalink( $current_post_id ).'</span>
+                  <a class="blog-related-title" href="'.get_permalink( $current_post_id ).'">'.get_the_title($current_post_id).'</a>
                </div>
             </div>
          </details>';
