@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.2
+ * Version: 0.3.3
  * Author: Rohan
  */
 
@@ -123,10 +123,10 @@ function ncoa_related_pillars() {
          $query->the_post();
          $current_post_id = get_the_ID();
          $output .= '<details>
-            <summary style="color: #1f1f1f;">' . get_the_title($current_post_id) . '</summary>
+            <summary style="color: #111111;">' . get_the_title($current_post_id) . '</summary>
             <p style="margin: 20px 0;">' . get_the_excerpt($current_post_id) . '</p>
-            <div style="display:flex; flex-direction: row; gap: 10px;">
-               <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" style="height: 3rem; aspect-ratio: 1/1; border: 1px solid #ccc; border-radius: 50px; object-fit: cover;">
+            <div style="display:flex; flex-direction: row; align-items: center; gap: 10px;">
+               <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" style="height: 2.5rem; aspect-ratio: 1/1; border: 1px solid #ccc; border-radius: 50px; object-fit: cover;">
                <div style="display: flex; flex-direction: column;">
                   <span style="font-size: 0.8rem;">'.get_permalink( $current_post_id ).'</span>
                   <a style="font-weight: 600; font-size: 1.1rem;" href="'.get_permalink( $current_post_id ).'">'.get_the_title($current_post_id).'</a>
