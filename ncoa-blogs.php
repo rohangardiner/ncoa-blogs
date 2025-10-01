@@ -5,6 +5,8 @@
  * Description: Blog posting for NOCA networked sites
  * Version: 0.3.7
  * Author: Rohan
+ * Requires at least: 6.0
+ * Tested up to: 6.8.2
  */
 
 // Create endppoint
