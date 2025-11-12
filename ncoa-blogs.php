@@ -35,7 +35,7 @@ function ncoa_check_token(WP_REST_Request $request) {
 function ncoa_create_blog_post($post_data) {
    // Determine post status from option (Tools > NCOA Blogs). Default to 'publish'.
    $allowed_status = array('publish', 'draft');
-   $option_status = get_option('ncoa_blog_post_status', 'publish');
+   $option_status = get_option('ncoa_blog_post_status', 'draft');
    if (! in_array($option_status, $allowed_status, true)) {
       $option_status = 'draft';
    }
@@ -238,7 +238,7 @@ function ncoa_sanitize_post_status($val) {
 }
 
 function ncoa_blog_post_status_field_cb() {
-   $val = get_option('ncoa_blog_post_status', 'publish');
+   $val = get_option('ncoa_blog_post_status', 'draft');
    ?>
    <fieldset>
       <label>
