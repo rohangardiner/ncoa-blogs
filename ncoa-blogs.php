@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.9
+ * Version: 0.3.10
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -49,11 +49,14 @@ function ncoa_create_blog_post($post_data) {
       $option_status = 'draft';
    }
 
+   // Get the selected post author from settings. Default to 1.
+   $post_author = absint(get_option('ncoa_blog_post_author', 1));
+
    $post_id = wp_insert_post([
       'post_title'   => sanitize_text_field($post_data['title']),
       'post_content' => wp_kses_post($post_data['content']) . '<div class="src">' . $post_data["source"] . '</div>',
       'post_status'  => $option_status,
-      'post_author'  => 1,
+      'post_author'  => $post_author,
       'post_type'    => 'post',
       'tags_input'   => $post_data['pillars'],
    ]);
@@ -220,6 +223,12 @@ function ncoa_blogs_settings_init() {
       'default' => 'draft',
    ));
 
+   register_setting('ncoa_blogs_settings', 'ncoa_blog_post_author', array(
+      'type' => 'integer',
+      'sanitize_callback' => 'ncoa_sanitize_post_author',
+      'default' => 1,
+   ));
+
    add_settings_section(
       'ncoa_blogs_main_section',
       __('Settings', 'ncoa-blogs'),
@@ -231,6 +240,14 @@ function ncoa_blogs_settings_init() {
       'ncoa_blog_post_status',
       __('Blog post status', 'ncoa-blogs'),
       'ncoa_blog_post_status_field_cb',
+      'ncoa-blogs',
+      'ncoa_blogs_main_section'
+   );
+
+   add_settings_field(
+      'ncoa_blog_post_author',
+      __('Blog post author', 'ncoa-blogs'),
+      'ncoa_blog_post_author_field_cb',
       'ncoa-blogs',
       'ncoa_blogs_main_section'
    );
@@ -249,6 +266,15 @@ function ncoa_sanitize_post_status($val) {
    return 'draft';
 }
 
+function ncoa_sanitize_post_author($val) {
+   $val = absint($val);
+   $user = get_userdata($val);
+   if ($user) {
+      return $val;
+   }
+   return 1;
+}
+
 function ncoa_blog_post_status_field_cb() {
    $val = get_option('ncoa_blog_post_status', 'draft');
    ?>
@@ -262,7 +288,22 @@ function ncoa_blog_post_status_field_cb() {
          <?php esc_html_e('Draft', 'ncoa-blogs'); ?>
       </label>
    </fieldset>
-   <input type="hidden" name="ncoa_blog_post_status" value="draft" />
+   <?php
+}
+
+function ncoa_blog_post_author_field_cb() {
+   $val = absint(get_option('ncoa_blog_post_author', 1));
+   $users = get_users(array('order' => 'ASC', 'orderby' => 'display_name'));
+   ?>
+   <select name="ncoa_blog_post_author" id="ncoa_blog_post_author">
+      <?php
+      foreach ($users as $user) {
+         $selected = selected($user->ID, $val, false);
+         echo '<option value="' . esc_attr($user->ID) . '"' . $selected . '>' . esc_html($user->display_name) . ' (' . esc_html($user->user_login) . ')</option>';
+      }
+      ?>
+   </select>
+   <p class="description"><?php esc_html_e('Select the default author for blog posts created via the REST endpoint.', 'ncoa-blogs'); ?></p>
    <?php
 }
 
