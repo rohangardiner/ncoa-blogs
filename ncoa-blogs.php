@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.7
+ * Version: 0.3.8
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -33,10 +33,17 @@ function ncoa_check_token(WP_REST_Request $request) {
 
 // Create post
 function ncoa_create_blog_post($post_data) {
+   // Determine post status from option (Tools > NCOA Blogs). Default to 'publish'.
+   $allowed_status = array('publish', 'draft');
+   $option_status = get_option('ncoa_blog_post_status', 'publish');
+   if (! in_array($option_status, $allowed_status, true)) {
+      $option_status = 'draft';
+   }
+
    $post_id = wp_insert_post([
       'post_title'   => sanitize_text_field($post_data['title']),
       'post_content' => wp_kses_post($post_data['content']) . '<div class="src">' . $post_data["source"] . '</div>',
-      'post_status'  => 'publish',
+      'post_status'  => $option_status,
       'post_author'  => 1,
       'post_type'    => 'post',
       'tags_input'   => $post_data['pillars'],
@@ -178,4 +185,88 @@ function ncoa_load_textdomain() {
 add_action( 'wp_enqueue_scripts', 'ncoa_blog_styles' );
 function ncoa_blog_styles() {
    wp_enqueue_style( 'ncoa-blog-style', plugin_dir_url( __FILE__ ) . '/ncoa-blog-styles.css', array(), '1.0.0', 'all' );
+}
+
+// -------------------------
+// Admin settings: Tools > NCOA Blogs
+// -------------------------
+
+add_action('admin_menu', 'ncoa_blogs_admin_menu');
+function ncoa_blogs_admin_menu() {
+   // Places page under Tools
+   add_management_page(
+      __('NCOA Blogs', 'ncoa-blogs'),
+      __('NCOA Blogs', 'ncoa-blogs'),
+      'manage_options',
+      'ncoa-blogs',
+      'ncoa_blogs_settings_page'
+   );
+}
+
+add_action('admin_init', 'ncoa_blogs_settings_init');
+function ncoa_blogs_settings_init() {
+   register_setting('ncoa_blogs_settings', 'ncoa_blog_post_status', array(
+      'type' => 'string',
+      'sanitize_callback' => 'ncoa_sanitize_post_status',
+      'default' => 'publish',
+   ));
+
+   add_settings_section(
+      'ncoa_blogs_main_section',
+      __('Settings', 'ncoa-blogs'),
+      'ncoa_blogs_main_section_cb',
+      'ncoa-blogs'
+   );
+
+   add_settings_field(
+      'ncoa_blog_post_status',
+      __('Blog post status', 'ncoa-blogs'),
+      'ncoa_blog_post_status_field_cb',
+      'ncoa-blogs',
+      'ncoa_blogs_main_section'
+   );
+}
+
+function ncoa_blogs_main_section_cb() {
+   echo '<p>' . esc_html__('Control the default post_status used when creating blog posts via the NCOA REST endpoint.', 'ncoa-blogs') . '</p>';
+}
+
+function ncoa_sanitize_post_status($val) {
+   $val = sanitize_text_field($val);
+   $allowed = array('publish', 'draft');
+   return in_array($val, $allowed, true) ? $val : 'publish';
+}
+
+function ncoa_blog_post_status_field_cb() {
+   $val = get_option('ncoa_blog_post_status', 'publish');
+   ?>
+   <fieldset>
+      <label>
+         <input type="radio" name="ncoa_blog_post_status" value="publish" <?php checked('publish', $val); ?> />
+         <?php esc_html_e('Publish', 'ncoa-blogs'); ?>
+      </label><br/>
+      <label>
+         <input type="radio" name="ncoa_blog_post_status" value="draft" <?php checked('draft', $val); ?> />
+         <?php esc_html_e('Draft', 'ncoa-blogs'); ?>
+      </label>
+   </fieldset>
+   <?php
+}
+
+function ncoa_blogs_settings_page() {
+   if (! current_user_can('manage_options')) {
+      return;
+   }
+   ?>
+   <div class="wrap">
+      <h1><?php esc_html_e('NCOA Blogs', 'ncoa-blogs'); ?></h1>
+      <form method="post" action="options.php">
+         <?php
+         settings_fields('ncoa_blogs_settings');
+         do_settings_sections('ncoa-blogs');
+         submit_button();
+         ?>
+      </form>
+   </div>
+   <?php
 }
