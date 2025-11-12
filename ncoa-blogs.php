@@ -3,11 +3,20 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.8
+ * Version: 0.3.9
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
  */
+
+// Register activation hook to initialize options
+register_activation_hook(__FILE__, 'ncoa_blogs_activate');
+function ncoa_blogs_activate() {
+   // Initialize the option if it doesn't exist
+   if (get_option('ncoa_blog_post_status') === false) {
+      add_option('ncoa_blog_post_status', 'draft');
+   }
+}
 
 // Create endppoint
 add_action('rest_api_init', function () {
@@ -208,7 +217,7 @@ function ncoa_blogs_settings_init() {
    register_setting('ncoa_blogs_settings', 'ncoa_blog_post_status', array(
       'type' => 'string',
       'sanitize_callback' => 'ncoa_sanitize_post_status',
-      'default' => 'publish',
+      'default' => 'draft',
    ));
 
    add_settings_section(
@@ -234,7 +243,10 @@ function ncoa_blogs_main_section_cb() {
 function ncoa_sanitize_post_status($val) {
    $val = sanitize_text_field($val);
    $allowed = array('publish', 'draft');
-   return in_array($val, $allowed, true) ? $val : 'publish';
+   if (in_array($val, $allowed, true)) {
+      return $val;
+   }
+   return 'draft';
 }
 
 function ncoa_blog_post_status_field_cb() {
@@ -250,6 +262,7 @@ function ncoa_blog_post_status_field_cb() {
          <?php esc_html_e('Draft', 'ncoa-blogs'); ?>
       </label>
    </fieldset>
+   <input type="hidden" name="ncoa_blog_post_status" value="draft" />
    <?php
 }
 
