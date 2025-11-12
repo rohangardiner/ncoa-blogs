@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.11
+ * Version: 0.3.12
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -102,6 +102,16 @@ function ncoa_upload_image_from_url($image_url, $post_id = 0, $desc = null, $ret
       return false;
    }
    return $attachment_id;
+}
+
+// Add shortcode to display post featured image
+add_shortcode('image', 'ncoa_blog_image');
+function ncoa_blog_image($atts) {
+   if (has_post_thumbnail()) {
+      $img_url = get_the_post_thumbnail_url(get_the_ID(), 'large');
+      return '<img src="' . esc_url($img_url) . '" alt="' . esc_attr(get_the_title()) . '" class="blog-featured-image-img"/  >';
+   }
+   return '';
 }
 
 // Add shortcode to display banner content
