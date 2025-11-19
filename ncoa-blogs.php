@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.12
+ * Version: 0.3.13
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -117,10 +117,19 @@ function ncoa_blog_image($atts) {
 // Add shortcode to display banner content
 add_shortcode('blogbanner', 'ncoa_blog_banner');
 function ncoa_blog_banner($atts = array(), $content = null) {
-   $background = $atts['background'] ?? plugin_dir_url(__FILE__) . '/assets/default-bg.jpg';
-   $output = '<div class="blog-banner" 
-   style="background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.1) 100%),
-   url(' . $background . ');">' . do_shortcode($content) . '</div>';
+   $atts = shortcode_atts(array(
+      'background' => '',
+   ), $atts, 'blogbanner');
+
+   $background = $atts['background'];
+   if (empty($background)) {
+      $background = get_option('ncoa_blog_banner_bg', plugin_dir_url(__FILE__) . 'assets/default-bg.jpg');
+   }
+   // Ensure URL is escaped for output
+   $background = esc_url($background);
+
+   $gradient = "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.1) 100%)";
+   $output = '<div class="blog-banner" style="background-image: ' . esc_attr($gradient) . ', url(\'' . esc_url($background) . '\');">' . do_shortcode($content) . '</div>';
    return $output;
 }
 
@@ -138,11 +147,13 @@ function ncoa_related_pillars() {
 
    $output = '';
 
+   global $post; // Refer to current post object to get ID to exclude
    $args = array(
       'post_type' => 'post',
       'post_status' => 'publish',
       'tag__in' => $tag_ids,
       'posts_per_page' => -1,
+      'post__not_in' => array( $post->ID )
    );
    $query = new WP_Query($args);
 
@@ -239,6 +250,12 @@ function ncoa_blogs_settings_init() {
       'default' => 1,
    ));
 
+   register_setting('ncoa_blogs_settings', 'ncoa_blog_banner_bg', array(
+      'type' => 'string',
+      'sanitize_callback' => 'ncoa_sanitize_blog_banner_bg',
+      'default' => plugin_dir_url(__FILE__) . 'assets/default-bg.jpg',
+   ));
+
    add_settings_section(
       'ncoa_blogs_main_section',
       __('Settings', 'ncoa-blogs'),
@@ -261,10 +278,18 @@ function ncoa_blogs_settings_init() {
       'ncoa-blogs',
       'ncoa_blogs_main_section'
    );
+
+   add_settings_field(
+      'ncoa_blog_banner_bg',
+      __('Blog banner background', 'ncoa-blogs'),
+      'ncoa_blog_banner_bg_field_cb',
+      'ncoa-blogs',
+      'ncoa_blogs_main_section'
+   );
 }
 
 function ncoa_blogs_main_section_cb() {
-   echo '<p>' . esc_html__('Control the default post_status used when creating blog posts via the NCOA REST endpoint.', 'ncoa-blogs') . '</p>';
+   echo '<p>' . esc_html__('Control the default settings when creating blog posts via the NCOA REST endpoint.', 'ncoa-blogs') . '</p>';
 }
 
 function ncoa_sanitize_post_status($val) {
@@ -283,6 +308,19 @@ function ncoa_sanitize_post_author($val) {
       return $val;
    }
    return 1;
+}
+
+function ncoa_sanitize_blog_banner_bg($val) {
+   // Normalize and validate a URL for storage
+   if (function_exists('esc_url_raw')) {
+      $val = esc_url_raw($val);
+   } else {
+      $val = filter_var($val, FILTER_SANITIZE_URL);
+   }
+   if (empty($val)) {
+      return plugin_dir_url(__FILE__) . 'assets/default-bg.jpg';
+   }
+   return $val;
 }
 
 function ncoa_blog_post_status_field_cb() {
@@ -314,6 +352,18 @@ function ncoa_blog_post_author_field_cb() {
       ?>
    </select>
    <p class="description"><?php esc_html_e('Select the default author for blog posts created via the REST endpoint.', 'ncoa-blogs'); ?></p>
+   <?php
+}
+
+function ncoa_blog_banner_bg_field_cb() {
+   $val = get_option('ncoa_blog_banner_bg', plugin_dir_url(__FILE__) . 'assets/default-bg.jpg');
+   ?>
+   <fieldset>
+      <label>
+         <input type="text" name="ncoa_blog_banner_bg" value="<?php echo esc_attr($val); ?>" placeholder="<?php echo esc_attr(plugin_dir_url(__FILE__) . 'assets/default-bg.jpg'); ?>" />
+      </label>
+   </fieldset>
+   <p class="description"><?php esc_html_e('Enter an image URL to be used for the background of blog banner shortcode', 'ncoa-blogs'); ?></p>
    <?php
 }
 
