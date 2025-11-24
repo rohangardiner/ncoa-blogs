@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NOCA networked sites
- * Version: 0.3.14
+ * Version: 0.3.15
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -36,6 +36,7 @@ function ncoa_check_token(WP_REST_Request $request) {
    if ($auth_header[0] == $expected_token) {
       return true;
    } else {
+      error_log('NCOA Blogs Authorisation failed. Provided: ' . $auth_header[0]);
       return new WP_Error('rest_forbidden', __('Incorrect authorisation', 'ncoa-blogs'), array('status' => 401));
    }
 }
