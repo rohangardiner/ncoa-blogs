@@ -100,7 +100,7 @@ function ncoa_upload_image_from_url($image_url, $post_id = 0, $desc = null, $ret
    require_once(ABSPATH . 'wp-admin/includes/image.php');
    $attachment_id = media_sideload_image($image_url, $post_id, $desc, $return_type);
    if (is_wp_error($attachment_id)) {
-      error_log('Error sideloading image: ' . $attachment_id->get_error_message());
+      error_log('NCOA Blogs Error sideloading image: ' . $attachment_id->get_error_message());
       return false;
    }
    return $attachment_id;
@@ -111,7 +111,7 @@ add_shortcode('image', 'ncoa_blog_image');
 function ncoa_blog_image($atts) {
    if (has_post_thumbnail()) {
       $img_url = get_the_post_thumbnail_url(get_the_ID(), 'large');
-      return '<img src="' . esc_url($img_url) . '" alt="' . esc_attr(get_the_title()) . '" class="blog-featured-image-img"/  >';
+      return '<img src="' . esc_url($img_url) . '" alt="' . esc_attr(get_the_title()) . '" class="blog-image"/  >';
    }
    return '';
 }
@@ -143,8 +143,8 @@ function ncoa_related_pillars() {
       return;
    }
    $tag_ids = array();
-   foreach( $post_tags as $tag ) {
-       $tag_ids[] = $tag->term_id;
+   foreach ($post_tags as $tag) {
+      $tag_ids[] = $tag->term_id;
    }
 
    $output = '';
@@ -155,7 +155,7 @@ function ncoa_related_pillars() {
       'post_status' => 'publish',
       'tag__in' => $tag_ids,
       'posts_per_page' => -1,
-      'post__not_in' => array( $post->ID )
+      'post__not_in' => array($post->ID)
    );
    $query = new WP_Query($args);
 
@@ -169,10 +169,10 @@ function ncoa_related_pillars() {
             <summary>' . get_the_title($current_post_id) . '</summary>
             <p class="blog-related-content">' . get_the_excerpt($current_post_id) . '</p>
             <div class="blog-related-links">
-               <img src="'.get_the_post_thumbnail_url($current_post_id, 'thumbnail').'" class="blog-related-thumb">
+               <img src="' . get_the_post_thumbnail_url($current_post_id, 'thumbnail') . '" class="blog-related-thumb">
                <div class="blog-related-col">
-                  <span class="blog-related-url">'.get_permalink( $current_post_id ).'</span>
-                  <a class="blog-related-title" href="'.get_permalink( $current_post_id ).'">'.get_the_title($current_post_id).'</a>
+                  <span class="blog-related-url">' . get_permalink($current_post_id) . '</span>
+                  <a class="blog-related-title" href="' . get_permalink($current_post_id) . '">' . get_the_title($current_post_id) . '</a>
                </div>
             </div>
          </details>';
@@ -192,7 +192,7 @@ function ncoa_plugin_updater_init() {
       define('WP_GITHUB_FORCE_UPDATE', true);
    }
 
-   if (is_admin()) { // note the use of is_admin() to double check that this is happening in the admin
+   if (is_admin()) {
       $config = array(
          'slug' => plugin_basename(__FILE__),
          'proper_folder_name' => 'ncoa-blogs', // this is the name of the folder your plugin lives in
@@ -217,9 +217,9 @@ function ncoa_load_textdomain() {
 }
 
 // Handle enqueueing styles
-add_action( 'wp_enqueue_scripts', 'ncoa_blog_styles' );
+add_action('wp_enqueue_scripts', 'ncoa_blog_styles');
 function ncoa_blog_styles() {
-   wp_enqueue_style( 'ncoa-blog-style', plugin_dir_url( __FILE__ ) . '/ncoa-blog-styles.css', array(), '1.0.0', 'all' );
+   wp_enqueue_style('ncoa-blog-style', plugin_dir_url(__FILE__) . '/ncoa-blog-styles.css', array(), '1.0.0', 'all');
 }
 
 // -------------------------
@@ -327,24 +327,24 @@ function ncoa_sanitize_blog_banner_bg($val) {
 
 function ncoa_blog_post_status_field_cb() {
    $val = get_option('ncoa_blog_post_status', 'draft');
-   ?>
+?>
    <fieldset>
       <label>
          <input type="radio" name="ncoa_blog_post_status" value="publish" <?php checked('publish', $val); ?> />
          <?php esc_html_e('Publish', 'ncoa-blogs'); ?>
-      </label><br/>
+      </label><br />
       <label>
          <input type="radio" name="ncoa_blog_post_status" value="draft" <?php checked('draft', $val); ?> />
          <?php esc_html_e('Draft', 'ncoa-blogs'); ?>
       </label>
    </fieldset>
-   <?php
+<?php
 }
 
 function ncoa_blog_post_author_field_cb() {
    $val = absint(get_option('ncoa_blog_post_author', 1));
    $users = get_users(array('order' => 'ASC', 'orderby' => 'display_name'));
-   ?>
+?>
    <select name="ncoa_blog_post_author" id="ncoa_blog_post_author">
       <?php
       foreach ($users as $user) {
@@ -354,26 +354,26 @@ function ncoa_blog_post_author_field_cb() {
       ?>
    </select>
    <p class="description"><?php esc_html_e('Select the default author for blog posts created via the REST endpoint.', 'ncoa-blogs'); ?></p>
-   <?php
+<?php
 }
 
 function ncoa_blog_banner_bg_field_cb() {
    $val = get_option('ncoa_blog_banner_bg', plugin_dir_url(__FILE__) . 'assets/default-bg.jpg');
-   ?>
+?>
    <fieldset>
       <label>
          <input type="text" name="ncoa_blog_banner_bg" value="<?php echo esc_attr($val); ?>" placeholder="<?php echo esc_attr(plugin_dir_url(__FILE__) . 'assets/default-bg.jpg'); ?>" />
       </label>
    </fieldset>
    <p class="description"><?php esc_html_e('Enter an image URL to be used for the background of blog banner shortcode', 'ncoa-blogs'); ?></p>
-   <?php
+<?php
 }
 
 function ncoa_blogs_settings_page() {
    if (! current_user_can('manage_options')) {
       return;
    }
-   ?>
+?>
    <div class="wrap">
       <h1><?php esc_html_e('NCOA Blogs', 'ncoa-blogs'); ?></h1>
       <form method="post" action="options.php">
@@ -384,5 +384,5 @@ function ncoa_blogs_settings_page() {
          ?>
       </form>
    </div>
-   <?php
+<?php
 }
