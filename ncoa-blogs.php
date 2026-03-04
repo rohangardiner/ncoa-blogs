@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.15
+ * Version: 0.3.16
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -50,6 +50,9 @@ function ncoa_create_blog_post($post_data) {
       $option_status = 'draft';
    }
 
+   // DEBUG: Log data received
+   error_log('NCOA Blogs received data: ' . print_r($post_data, true));
+
    // Get the selected post author from settings. Default to 1.
    $post_author = absint(get_option('ncoa_blog_post_author', 1));
 
@@ -62,7 +65,12 @@ function ncoa_create_blog_post($post_data) {
       'tags_input'   => $post_data['pillars'],
    ]);
    // Set featured image for this post from the provided url
-   set_post_thumbnail($post_id, ncoa_upload_image_from_url($post_data['image'], $post_id, $post_data['title']));
+   if ( isset($post_data['image']) && !empty($post_data['image']) ) {
+      set_post_thumbnail($post_id, ncoa_upload_image_from_url($post_data['image'], $post_id, $post_data['title']));
+   } else {
+      error_log('NCOA Blogs: No featured image supplied, continuing');
+   }
+   
 
    // Set SEO title and meta description
    $seo_title = $post_data['seo_title'] ?? $post_data['post_title'];
