@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.17
+ * Version: 0.3.18
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -49,15 +49,23 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
       $post_data = $request->get_body_params();
    }
 
+   // DEBUG: Log full request details
+   error_log('NCOA Blogs request method: ' . $request->get_method());
+   error_log('NCOA Blogs request headers: ' . print_r($request->get_headers(), true));
+   error_log('NCOA Blogs received data: ' . print_r($post_data, true));
+
+   // Validate that we received data
+   if (empty($post_data) || !is_array($post_data)) {
+      error_log('NCOA Blogs: No data received in request body');
+      return new WP_Error('rest_invalid_request', __('No post data provided', 'ncoa-blogs'), array('status' => 400));
+   }
+
    // Determine post status from option (Tools > NCOA Blogs). Default to 'draft'.
    $allowed_status = array('publish', 'draft');
    $option_status = get_option('ncoa_blog_post_status', 'draft');
    if (! in_array($option_status, $allowed_status, true)) {
       $option_status = 'draft';
    }
-
-   // DEBUG: Log data received
-   error_log('NCOA Blogs received data: ' . print_r($post_data, true));
 
    // Get the selected post author from settings. Default to 1.
    $post_author = absint(get_option('ncoa_blog_post_author', 1));
@@ -67,6 +75,12 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
    $content = isset($post_data['content']) ? wp_kses_post($post_data['content']) : '';
    $source = isset($post_data['source']) ? wp_kses_post($post_data['source']) : '';
    $pillars = isset($post_data['pillars']) ? $post_data['pillars'] : array();
+
+   // Validate required fields
+   if (empty($title) || empty($content)) {
+      error_log('NCOA Blogs: Missing required fields. Title: ' . ($title ? 'present' : 'missing') . ', Content: ' . ($content ? 'present' : 'missing'));
+      return new WP_Error('rest_invalid_request', __('Title and content are required', 'ncoa-blogs'), array('status' => 400));
+   }
 
    $post_arr = array(
       'post_title'   => $title,
@@ -100,11 +114,14 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
 
    // Return response
    if (! empty($post_id) && ! is_wp_error($post_id)) {
-      return rest_ensure_response('success');
+      error_log('NCOA Blogs: Post created successfully with ID: ' . $post_id);
+      return rest_ensure_response(array('success' => true, 'post_id' => $post_id));
    } else {
-      $msg = is_wp_error($post_id) ? $post_id->get_error_message() : 'unknown';
-      error_log('NCOA Blogs Error creating post: ' . $msg);
-      return rest_ensure_response(array('error' => 'Post could not be created'));
+      $msg = is_wp_error($post_id) ? $post_id->get_error_message() : 'unknown error occurred';
+      $code = is_wp_error($post_id) ? $post_id->get_error_code() : 'unknown_code';
+      error_log('NCOA Blogs Error creating post: ' . $msg . ' (Code: ' . $code . ')');
+      error_log('NCOA Blogs Post array was: ' . print_r($post_arr, true));
+      return new WP_Error('post_creation_error', __('Post could not be created: ', 'ncoa-blogs') . $msg, array('status' => 500));
    }
 }
 
