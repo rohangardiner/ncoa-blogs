@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.18
+ * Version: 0.3.19
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -106,8 +106,8 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
    }
 
    // Set SEO title and meta description
-   $seo_title = $post_data['seo_title'] ?? $title;
-   $seo_description = $post_data['seo_description'] ?? wp_trim_words(strip_tags($content), 30, '...');
+   $seo_title = ( isset($post_data['seo_title']) && ! empty($post_data['seo_title']) && $post_data['seo_title'] !== '' ) ? sanitize_text_field($post_data['seo_title']) : $title;
+   $seo_description = ( isset($post_data['seo_description']) && ! empty($post_data['seo_description']) && $post_data['seo_description'] !== '' ) ? sanitize_text_field($post_data['seo_description']) : wp_trim_words(strip_tags($content), 30, '...');
    if (! empty($post_id) && ! is_wp_error($post_id)) {
       ncoa_update_seo_meta($post_id, $seo_title, $seo_description);
    }
