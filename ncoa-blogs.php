@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.19
+ * Version: 0.3.20
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -50,9 +50,9 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
    }
 
    // DEBUG: Log full request details
-   error_log('NCOA Blogs request method: ' . $request->get_method());
-   error_log('NCOA Blogs request headers: ' . print_r($request->get_headers(), true));
-   error_log('NCOA Blogs received data: ' . print_r($post_data, true));
+   //error_log('NCOA Blogs request method: ' . $request->get_method());
+   //error_log('NCOA Blogs request headers: ' . print_r($request->get_headers(), true));
+   //error_log('NCOA Blogs received data: ' . print_r($post_data, true));
 
    // Validate that we received data
    if (empty($post_data) || !is_array($post_data)) {
