@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.16
+ * Version: 0.3.17
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -42,8 +42,14 @@ function ncoa_check_token(WP_REST_Request $request) {
 }
 
 // Create post
-function ncoa_create_blog_post($post_data) {
-   // Determine post status from option (Tools > NCOA Blogs). Default to 'publish'.
+function ncoa_create_blog_post(WP_REST_Request $request) {
+   // Get params from request (JSON body preferred)
+   $post_data = $request->get_json_params();
+   if (empty($post_data)) {
+      $post_data = $request->get_body_params();
+   }
+
+   // Determine post status from option (Tools > NCOA Blogs). Default to 'draft'.
    $allowed_status = array('publish', 'draft');
    $option_status = get_option('ncoa_blog_post_status', 'draft');
    if (! in_array($option_status, $allowed_status, true)) {
@@ -56,33 +62,49 @@ function ncoa_create_blog_post($post_data) {
    // Get the selected post author from settings. Default to 1.
    $post_author = absint(get_option('ncoa_blog_post_author', 1));
 
-   $post_id = wp_insert_post([
-      'post_title'   => sanitize_text_field($post_data['title']),
-      'post_content' => wp_kses_post($post_data['content']) . '<div class="src">' . $post_data["source"] . '</div>',
+   // Prepare fields safely
+   $title = isset($post_data['title']) ? sanitize_text_field($post_data['title']) : '';
+   $content = isset($post_data['content']) ? wp_kses_post($post_data['content']) : '';
+   $source = isset($post_data['source']) ? wp_kses_post($post_data['source']) : '';
+   $pillars = isset($post_data['pillars']) ? $post_data['pillars'] : array();
+
+   $post_arr = array(
+      'post_title'   => $title,
+      'post_content' => $content . ($source !== '' ? '<div class="src">' . $source . '</div>' : ''),
       'post_status'  => $option_status,
       'post_author'  => $post_author,
       'post_type'    => 'post',
-      'tags_input'   => $post_data['pillars'],
-   ]);
+      'tags_input'   => $pillars,
+   );
+
+   $post_id = wp_insert_post($post_arr);
+
    // Set featured image for this post from the provided url
-   if ( isset($post_data['image']) && !empty($post_data['image']) ) {
-      set_post_thumbnail($post_id, ncoa_upload_image_from_url($post_data['image'], $post_id, $post_data['title']));
+   if (! empty($post_id) && ! is_wp_error($post_id) && isset($post_data['image']) && ! empty($post_data['image'])) {
+      $thumb_id = ncoa_upload_image_from_url($post_data['image'], $post_id, $title);
+      if ($thumb_id) {
+         set_post_thumbnail($post_id, $thumb_id);
+      }
    } else {
-      error_log('NCOA Blogs: No featured image supplied, continuing');
+      if (empty($post_data['image'])) {
+         error_log('NCOA Blogs: No featured image supplied, continuing');
+      }
    }
-   
 
    // Set SEO title and meta description
-   $seo_title = $post_data['seo_title'] ?? $post_data['post_title'];
-   $seo_description = $post_data['seo_description'] ?? wp_trim_words(strip_tags($post_data['post_content']), 30, '...');
-   ncoa_update_seo_meta($post_id, $seo_title, $seo_description);
+   $seo_title = $post_data['seo_title'] ?? $title;
+   $seo_description = $post_data['seo_description'] ?? wp_trim_words(strip_tags($content), 30, '...');
+   if (! empty($post_id) && ! is_wp_error($post_id)) {
+      ncoa_update_seo_meta($post_id, $seo_title, $seo_description);
+   }
 
    // Return response
-   if ($post_id && !is_wp_error($post_id)) {
+   if (! empty($post_id) && ! is_wp_error($post_id)) {
       return rest_ensure_response('success');
    } else {
-      error_log('NCOA Blogs Error creating post: ' . $post_id->get_error_message());
-      return rest_ensure_response(['error' => 'Post could not be created']);
+      $msg = is_wp_error($post_id) ? $post_id->get_error_message() : 'unknown';
+      error_log('NCOA Blogs Error creating post: ' . $msg);
+      return rest_ensure_response(array('error' => 'Post could not be created'));
    }
 }
 
