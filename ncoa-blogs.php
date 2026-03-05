@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.21
+ * Version: 0.3.22
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -129,7 +129,7 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
 function ncoa_update_seo_meta($post_id, $seo_title, $seo_description) {
    // Check for Yoast or Rank Math
    if (in_array('wordpress-seo/wp-seo.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-      $seo_title !== null ? update_post_meta($post_id, '_yoast_wpseo_title', $seo_title) : null;
+      $seo_title !== null ? update_post_meta($post_id, '_yoast_wpseo_title', $seo_title . ' %%sep%% %%sitename%%') : null;
       $seo_description !== null ? update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_description) : null;
    }
 
