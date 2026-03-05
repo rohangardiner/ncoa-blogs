@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.20
+ * Version: 0.3.21
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -106,8 +106,8 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
    }
 
    // Set SEO title and meta description
-   $seo_title = ( isset($post_data['seo_title']) && ! empty($post_data['seo_title']) && $post_data['seo_title'] !== '' ) ? sanitize_text_field($post_data['seo_title']) : $title;
-   $seo_description = ( isset($post_data['seo_description']) && ! empty($post_data['seo_description']) && $post_data['seo_description'] !== '' ) ? sanitize_text_field($post_data['seo_description']) : wp_trim_words(strip_tags($content), 30, '...');
+   $seo_title = ( isset($post_data['seo_title']) && ! empty($post_data['seo_title']) && $post_data['seo_title'] !== '' ) ? sanitize_text_field($post_data['seo_title']) : null;
+   $seo_description = ( isset($post_data['seo_description']) && ! empty($post_data['seo_description']) && $post_data['seo_description'] !== '' ) ? sanitize_text_field($post_data['seo_description']) : null;
    if (! empty($post_id) && ! is_wp_error($post_id)) {
       ncoa_update_seo_meta($post_id, $seo_title, $seo_description);
    }
@@ -129,14 +129,14 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
 function ncoa_update_seo_meta($post_id, $seo_title, $seo_description) {
    // Check for Yoast or Rank Math
    if (in_array('wordpress-seo/wp-seo.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-      update_post_meta($post_id, '_yoast_wpseo_title', $seo_title);
-      update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_description);
+      $seo_title !== null ? update_post_meta($post_id, '_yoast_wpseo_title', $seo_title) : null;
+      $seo_description !== null ? update_post_meta($post_id, '_yoast_wpseo_metadesc', $seo_description) : null;
    }
 
    if (in_array('seo-by-rank-math/rank-math.php', apply_filters('active_plugins', get_option('active_plugins')))) {
       // Update Rank Math SEO title and description
-      update_post_meta($post_id, 'rank_math_title', $seo_title . ' %sep% %sitename%');
-      update_post_meta($post_id, 'rank_math_description', $seo_description);
+      $seo_title !== null ? update_post_meta($post_id, 'rank_math_title', $seo_title . ' %sep% %sitename%') : null;
+      $seo_description !== null ? update_post_meta($post_id, 'rank_math_description', $seo_description) : null;
    }
 }
 
