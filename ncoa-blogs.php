@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.22
+ * Version: 0.3.23
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -115,6 +115,7 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
    // Return response
    if (! empty($post_id) && ! is_wp_error($post_id)) {
       error_log('NCOA Blogs: Post created successfully with ID: ' . $post_id);
+      do_action('ncoa_blog_post_created', $post_id, $post_arr); // Add custom action which can be hooked in other scripts
       return rest_ensure_response(array('success' => true, 'post_id' => $post_id));
    } else {
       $msg = is_wp_error($post_id) ? $post_id->get_error_message() : 'unknown error occurred';
