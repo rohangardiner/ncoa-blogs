@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.24
+ * Version: 0.3.26
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -93,27 +93,24 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
 
    $post_id = wp_insert_post($post_arr);
 
-   // Set featured image for this post from the provided url. If none was supplied, fall back to the default option.
+   // Set featured image for this post.  Prefer supplied URL; otherwise fall back to
+   // the saved default attachment ID from settings, if any.
+   $default_image_id = absint(get_option('ncoa_blog_default_featured_image', 0));
    if ( ! empty($post_id) && ! is_wp_error($post_id) ) {
-      $image_url = '';
       if ( isset($post_data['image']) && ! empty($post_data['image']) ) {
-         // Use the supplied image from post data
+         // Use the supplied image URL from post data
          $image_url = $post_data['image'];
+         if ( ! empty($image_url) ) {
+            $thumb_id = ncoa_upload_image_from_url($image_url, $post_id, $title);
+            if ( $thumb_id ) {
+               set_post_thumbnail($post_id, $thumb_id);
+            }
+         }
+      } elseif ( $default_image_id > 0 ) {
+         // attach the default image directly by ID (no upload)
+         set_post_thumbnail($post_id, $default_image_id);
       } else {
-         // use the default image from plugin settings
-         $image_url = get_option('ncoa_blog_default_featured_image', plugin_dir_url(__FILE__) . 'assets/default-featured-image.jpg');
-         if ( empty($image_url) ) {
-            error_log('NCOA Blogs: Post ID ' . $post_id . ' No featured image supplied and no default configured, continuing');
-         } else {
-            error_log('NCOA Blogs: Post ID ' . $post_id . ' No image provided, using default placeholder image');
-         }
-      }
-
-      if ( ! empty($image_url) ) {
-         $thumb_id = ncoa_upload_image_from_url($image_url, $post_id, $title);
-         if ( $thumb_id ) {
-            set_post_thumbnail($post_id, $thumb_id);
-         }
+         error_log('NCOA Blogs: Post ID ' . $post_id . ' No image supplied and no default configured, continuing');
       }
    }
 
@@ -319,9 +316,9 @@ function ncoa_blogs_settings_init() {
    ));
 
    register_setting('ncoa_blogs_settings', 'ncoa_blog_default_featured_image', array(
-      'type' => 'string',
+      'type' => 'integer',
       'sanitize_callback' => 'ncoa_sanitize_blog_default_featured_image',
-      'default' => plugin_dir_url(__FILE__) . 'assets/default-featured-image.jpg',
+      'default' => 0,
    ));
 
    add_settings_section(
@@ -399,6 +396,11 @@ function ncoa_sanitize_blog_banner_bg($val) {
    return $val;
 }
 
+// sanitize callback for default featured image attachment ID
+function ncoa_sanitize_blog_default_featured_image($val) {
+   return absint($val);
+}
+
 function ncoa_blog_post_status_field_cb() {
    $val = get_option('ncoa_blog_post_status', 'draft');
 ?>
@@ -444,16 +446,17 @@ function ncoa_blog_banner_bg_field_cb() {
 }
 
 function ncoa_blog_default_featured_image_field_cb() {
-   $val = get_option('ncoa_blog_default_featured_image', plugin_dir_url(__FILE__) . 'assets/default-featured-image.jpg');
+   $val = absint(get_option('ncoa_blog_default_featured_image', 0));
 ?>
    <fieldset>
-      <label>
-         <input type="text" name="ncoa_blog_default_featured_image" value="<?php echo esc_attr($val); ?>" placeholder="<?php echo esc_attr(plugin_dir_url(__FILE__) . 'assets/default-featured-image.jpg'); ?>" />
+      <label for="ncoa_blog_default_featured_image">
+         <input type="number" id="ncoa_blog_default_featured_image" name="ncoa_blog_default_featured_image" value="<?php echo esc_attr($val); ?>" min="0" step="1" />
       </label>
    </fieldset>
-   <p class="description"><?php esc_html_e('Enter an image URL to be used as the default featured image for blog posts.', 'ncoa-blogs'); ?></p>
+   <p class="description"><?php esc_html_e('Enter the attachment ID to use as the default featured image for blog posts created via the REST endpoint. Leave blank or 0 for none.', 'ncoa-blogs'); ?></p>
 <?php
 }
+
 
 function ncoa_blogs_settings_page() {
    if (! current_user_can('manage_options')) {
