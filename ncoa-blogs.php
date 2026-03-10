@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.26
+ * Version: 0.3.27
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -75,6 +75,10 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
    $content = isset($post_data['content']) ? wp_kses_post($post_data['content']) : '';
    $source = isset($post_data['source']) ? wp_kses_post($post_data['source']) : '';
    $pillars = isset($post_data['pillars']) ? $post_data['pillars'] : array();
+   $categories = isset($post_data['categories']) ? $post_data['categories'] : array();
+
+   // Double check categories exist, or create them to be used in this post
+   $category_ids = ncoa_prepare_category_ids( $categories );
 
    // Validate required fields
    if (empty($title) || empty($content)) {
@@ -89,6 +93,7 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
       'post_author'  => $post_author,
       'post_type'    => 'post',
       'tags_input'   => $pillars,
+      'post_category' => $category_ids,
    );
 
    $post_id = wp_insert_post($post_arr);
@@ -133,6 +138,42 @@ function ncoa_create_blog_post(WP_REST_Request $request) {
       error_log('NCOA Blogs Post array was: ' . print_r($post_arr, true));
       return new WP_Error('post_creation_error', __('Post could not be created: ', 'ncoa-blogs') . $msg, array('status' => 500));
    }
+}
+
+function ncoa_prepare_category_ids( $cats ) {
+    if ( ! is_array( $cats ) ) {
+        // comma‑ or semicolon‑separated string
+        $cats = preg_split( '/\s*[,;]\s*/', trim( $cats ), -1, PREG_SPLIT_NO_EMPTY );
+    }
+
+    $term_ids = array();
+
+    foreach ( $cats as $cat ) {
+        if ( is_numeric( $cat ) ) {
+            $term_ids[] = absint( $cat );
+            continue;
+        }
+
+        $cat = sanitize_text_field( $cat );
+        if ( '' === $cat ) {
+            continue;
+        }
+
+        // term_exists() returns term_id or array, or 0/null if not found
+        $exists = term_exists( $cat, 'category' );
+
+        if ( $exists === 0 || $exists === null ) {
+            $new = wp_insert_term( $cat, 'category' );
+            if ( ! is_wp_error( $new ) && isset( $new['term_id'] ) ) {
+                $term_ids[] = $new['term_id'];
+            }
+        } else {
+            // if array, grab term_id element
+            $term_ids[] = is_array( $exists ) ? $exists['term_id'] : $exists;
+        }
+    }
+
+    return $term_ids;
 }
 
 // Set SEO title and meta description
