@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NCOA Blogs
  * Description: Blog posting for NCOA networked sites
- * Version: 0.3.27
+ * Version: 0.3.28
  * Author: Rohan
  * Requires at least: 6.0
  * Tested up to: 6.8.2
@@ -282,13 +282,9 @@ function ncoa_related_pillars() {
 }
 
 // Handle plugin updating
-add_action('init', 'ncoa_plugin_updater_init');
+add_action('admin_init', 'ncoa_plugin_updater_init');
 function ncoa_plugin_updater_init() {
    include_once 'updater.php';
-
-   if (! defined('WP_GITHUB_FORCE_UPDATE')) {
-      define('WP_GITHUB_FORCE_UPDATE', true);
-   }
 
    if (is_admin()) {
       $config = array(

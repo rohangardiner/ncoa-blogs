@@ -150,16 +150,9 @@ class WP_GitHub_Updater_Ncoa_Blogs {
 			$this->config['zip_url'] = $zip_url;
 		}
 
-
-		if ( ! isset( $this->config['new_version'] ) )
-			$this->config['new_version'] = $this->get_new_version();
-
-		if ( ! isset( $this->config['last_updated'] ) )
-			$this->config['last_updated'] = $this->get_date();
-
-		if ( ! isset( $this->config['description'] ) )
-			$this->config['description'] = $this->get_description();
-
+		// Read only from the local plugin file — no remote calls here.
+		// GitHub API calls are deferred to api_check() and get_plugin_info(),
+		// which only fire during WordPress's own scheduled update check cycle.
 		$plugin_data = $this->get_plugin_data();
 		if ( ! isset( $this->config['plugin_name'] ) )
 			$this->config['plugin_name'] = $plugin_data['Name'];
@@ -360,6 +353,10 @@ class WP_GitHub_Updater_Ncoa_Blogs {
 		if ( empty( $transient->checked ) )
 			return $transient;
 
+		// Lazy-load the remote version only when WP actually runs its update check.
+		if ( ! isset( $this->config['new_version'] ) )
+			$this->config['new_version'] = $this->get_new_version();
+
 		// check the version and decide if it's new
 		$update = version_compare( $this->config['new_version'], $this->config['version'] );
 
@@ -393,6 +390,14 @@ class WP_GitHub_Updater_Ncoa_Blogs {
 		// Check if this call API is for the right plugin
 		if ( !isset( $response->slug ) || $response->slug != $this->config['slug'] )
 			return false;
+
+		// Lazy-load fields that require remote GitHub calls, only when the plugin info screen is opened.
+		if ( ! isset( $this->config['new_version'] ) )
+			$this->config['new_version'] = $this->get_new_version();
+		if ( ! isset( $this->config['last_updated'] ) )
+			$this->config['last_updated'] = $this->get_date();
+		if ( ! isset( $this->config['description'] ) )
+			$this->config['description'] = $this->get_description();
 
 		$response->slug = $this->config['slug'];
 		$response->plugin_name  = $this->config['plugin_name'];
